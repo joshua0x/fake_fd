@@ -6,6 +6,7 @@ type CourseInfo struct {
 	SpeCourse  []SpcCourse  `json:"spe_course"`
 	HotCourse  []SpcCourse  `json:"hot_course"`
 	LenSys,LenSpe,LenHot int
+	Grade string `json:"-"`
 }
 
 

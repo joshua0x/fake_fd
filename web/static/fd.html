@@ -90,7 +90,7 @@
                                 <li class="subject-item"><a href="//fudao.qq.com/grade/7006/subject/6005/" data-value="6005" class="">英语</a></li>
                             </ul>
                             <div class="grade-filter">
-                                <span class="value">六年级</span>
+                                <span class="value">{{.Grade}}</span>
                                 <i class="filter-arrow"></i>
                                 <div class="filter-content-wrap">
                                     <div class="grade-content">
@@ -329,6 +329,8 @@
         console.log("mouseOn")
         // var a = $(".filter-content-wrap")
         // a.get(0).css("visibility","visible")
+        // $(".grade-item").css("display","block")
+        $(".grade-item").css("margin","8px 0 4px 12px")
         $(".filter-content-wrap").css("opacity",1)
         $(".filter-content-wrap").css("visibility","visible")
     });

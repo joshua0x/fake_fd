@@ -3,13 +3,16 @@ package common
 import (
 	"github.com/go-redis/redis"
 	"github.com/prometheus/common/log"
+	//"time"
 )
 var redisCli *redis.Client
+
 const (
 	redisAddr  = ":6379"
 )
 
 func init(){
+
 	redisCli = redis.NewClient(&redis.Options{Addr:redisAddr})
 	err := redisCli.Ping().Err()
 	if err != nil {
@@ -30,7 +33,3 @@ func QueryByGrade(grade string) []byte{
 func GeneData(grade string,bs []byte) error {
 	return redisCli.Set(grade,bs,0).Err()
 }
-
-
-
-

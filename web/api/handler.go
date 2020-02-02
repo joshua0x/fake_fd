@@ -1,15 +1,18 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"../../utils/common"
 	"../../utils/protocol"
 	"encoding/json"
-	"github.com/prometheus/common/log"
-	"net/http"
-	"html/template"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/log"
+	"html/template"
+	"net/http"
+	"strconv"
 )
+
+var gradeList = []string{"一年级", "二年级", "三年级", "四年级", "五年级", "六年级", "初一", "初二", "初三", "高一", "高二", "高三"}
 
 const sysHtml = `  <li class="course-card"><a data-modid="sys_course_card" data-tdw="{&quot;position&quot;:1,&quot;course_id&quot;:136045}" href="/pc/course.html?course_id=136045" target="_blank" rel="noopener noreferrer" has-expose="1">
                             <div class="course-title--wrapper">
@@ -36,29 +39,29 @@ const teacherHtml string = `<div class="teacher-wrapper">
                                                     <p class="teacher-type">授课</p>
                                                 </div>
                                             </div>`
-func geneSysDetails(item *protocol.SysPackage) template.HTML{
+
+func geneSysDetails(item *protocol.SysPackage) template.HTML {
 	ret := ""
-	for _,v := range item.CourseDetail{
+	for _, v := range item.CourseDetail {
 		//
-		left := v.StudentTotal-v.ApplyNum
+		left := v.StudentTotal - v.ApplyNum
 		if left <= 0 {
 			left = 1
 		}
-		ret += fmt.Sprintf(sysHtml,v.Name,v.TimePlan,tinfo(v.TeList),left,v.AfAmount/100)
+		ret += fmt.Sprintf(sysHtml, v.Name, v.TimePlan, tinfo(v.TeList), left, v.AfAmount/100)
 	}
 	return template.HTML(ret)
 }
 
-
-func tinfo(item []protocol.Teacher) string{
+func tinfo(item []protocol.Teacher) string {
 	ret := ""
-	for _,v := range item{
-		ret += fmt.Sprintf(teacherHtml,v.CoverUrl,v.Name)
+	for _, v := range item {
+		ret += fmt.Sprintf(teacherHtml, v.CoverUrl, v.Name)
 	}
 	return ret
 }
 
-func geneTeacherInfo(item *protocol.SpcCourse) template.HTML{
+func geneTeacherInfo(item *protocol.SpcCourse) template.HTML {
 	//ret := ""
 	//for _,v := range item.TeList{
 	//	ret += fmt.Sprintf(teacherHtml,v.CoverUrl,v.Name)
@@ -66,8 +69,8 @@ func geneTeacherInfo(item *protocol.SpcCourse) template.HTML{
 	return template.HTML(tinfo(item.TeList))
 }
 
-func initRouter(r *gin.Engine){
-	r.SetFuncMap(template.FuncMap{"gteacher":geneTeacherInfo,"gsys":geneSysDetails})
+func initRouter(r *gin.Engine) {
+	r.SetFuncMap(template.FuncMap{"gteacher": geneTeacherInfo, "gsys": geneSysDetails})
 	//r.SetFuncMap(template.FuncMap{"gsys":geneSysDetails})
 	r.LoadHTMLFiles("../static/fd.html")
 	r.GET("/", query)
@@ -75,36 +78,51 @@ func initRouter(r *gin.Engine){
 
 func filterPrice(item *protocol.CourseInfo) {
 	//price
-	for i,_ := range item.SpeCourse{
+	for i, _ := range item.SpeCourse {
 		item.SpeCourse[i].PreAmonut /= 100
 	}
 
-	for i,_ := range item.HotCourse{
+	for i, _ := range item.HotCourse {
 		item.HotCourse[i].PreAmonut /= 100
 	}
-
 }
 
-func query(c *gin.Context){
+func addGrade(grade int, item *protocol.CourseInfo) {
+	if grade < 1 || grade > len(gradeList) {
+		grade = 1
+	}
+	item.Grade = gradeList[grade-1]
+}
+
+//maps seqs
+
+func query(c *gin.Context) {
 	//query_srvs
 	//get_query_str  redis_stroed
-	grade := c.DefaultQuery("grade","2")
+	grade := c.DefaultQuery("grade", "2")
+	gradeInt, err := strconv.Atoi(grade)
+	if err != nil || !(gradeInt >= 1 && gradeInt <= 12) {
+		log.Info("invalid_arg")
+		gradeInt = 1
+		grade = "2"
+	}
+
 	bs := common.QueryByGrade(grade)
 	retObj := protocol.CourseInfo{}
-	//log.Info("arg ",grade,bs)
-	if bs !=nil {
-		err := json.Unmarshal(bs,&retObj)
+	if bs != nil {
+		err := json.Unmarshal(bs, &retObj)
 		if err != nil {
 			log.Error(err)
-		}else{
+		} else {
 			retObj.LenHot = len(retObj.HotCourse)
 			retObj.LenSys = len(retObj.SysPackage)
 			retObj.LenSpe = len(retObj.SpeCourse)
 			filterPrice(&retObj)
 		}
 	}
-	log.Infof("qres %v\n",retObj)
-	c.HTML(http.StatusOK,"fd.html",retObj)
+	//maps datas grade
+	addGrade(gradeInt, &retObj)
+	log.Debugf("qres %v\n", retObj)
+	c.HTML(http.StatusOK, "fd.html", retObj)
 	//page_loads floats
 }
-
