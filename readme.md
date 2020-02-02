@@ -1,5 +1,5 @@
 ##数据存储
-genedata/dump.go 爬取按年级搜索的json 数据 
+genedata/dump.go 爬取按年级搜索的json 数据 ,可设置cron 定时抓取到本地
 
 redis 按照年级id 存储课程数据(json)
   
