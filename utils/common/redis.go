@@ -6,7 +6,7 @@ import (
 )
 var redisCli *redis.Client
 const (
-	redisAddr  = ":3306"
+	redisAddr  = ":6379"
 )
 
 func init(){
