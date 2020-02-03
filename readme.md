@@ -12,6 +12,6 @@ redis 按照年级id 存储课程数据(json)
 ## 部署 
  ```apple js
     作为daemon 运行 
-    sh run.sh 
+    sh web/api/run.sh 
 ```
 
